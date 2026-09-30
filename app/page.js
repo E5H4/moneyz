@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 
 export default function Home() {
   const [financialData, setFinancialData] = useState(null);
-
-  const paycheck = 2100;
+  const [purchaseDescription, setPurchaseDescription] = useState("");
+  const [purchaseAmount, setPurchaseAmount] = useState("");
+  const [purchaseCard, setPurchaseCard] = useState("");
+  const [purchaseDate, setPurchaseDate] = useState("");
 
   useEffect(() => {
-    fetch("/api/financial")
+    fetch("/api/budget")
       .then((response) => response.json())
       .then((data) => {
         setFinancialData(data);
@@ -23,12 +25,10 @@ export default function Home() {
     );
   }
 
-  const fixedExpenses = financialData.expenses.reduce(
-    (total, expense) => total + expense.amount_cents,
-    0
-  );
-
-  const availableAfterBills = paycheck * 100 - fixedExpenses;
+  const paycheck = financialData.paycheck;
+  const fixedExpenses = financialData.fixed_expenses;
+  const availableAfterBills =
+    financialData.available_after_obligations;
 
   const levinCard = financialData.cards.find(
     (card) => card.name === "Levin Furniture"
@@ -58,11 +58,11 @@ export default function Home() {
           </p>
 
           <p className="mt-2 text-3xl font-bold text-gray-900">
-            ${paycheck.toFixed(2)}
+            ${(paycheck / 100).toFixed(2)}
           </p>
 
           <p className="mt-1 text-sm text-gray-500">
-            Available paycheck
+            Every 2 weeks
           </p>
         </div>
 
@@ -84,7 +84,7 @@ export default function Home() {
         {/* Available */}
         <div className="rounded-xl bg-white p-6 shadow-sm">
           <p className="text-sm font-medium text-gray-500">
-            Available After Bills
+            Available After Obligations
           </p>
 
           <p className="mt-2 text-3xl font-bold text-green-600">
@@ -92,7 +92,7 @@ export default function Home() {
           </p>
 
           <p className="mt-1 text-sm text-gray-500">
-            Before other allocations
+            After required expenses
           </p>
         </div>
 
@@ -114,38 +114,193 @@ export default function Home() {
 
       </section>
 
-      {/* Expenses */}
+
+
+      {/* this is a form Add Purchase */}
+    <section className="mt-10">
+    <div className="mb-4">
+        <h2 className="text-xl font-bold text-gray-900">
+        Add Purchase
+        </h2>
+        <p className="text-sm text-gray-500">
+        Record a purchase made with a credit card
+        </p>
+    </div>
+
+    <div className="rounded-xl bg-white p-6 shadow-sm">
+        <div className="grid gap-4 md:grid-cols-2">
+
+        {/* Credit Card */}
+        <div>
+            <label className="block text-sm font-medium text-gray-700">
+            Credit Card
+            </label>
+
+            <select
+            value={purchaseCard}
+            onChange={(event) => setPurchaseCard(event.target.value)}
+            className="mt-1 w-full rounded-lg border border-gray-300 p-2"
+            >
+            <option value="">Select a card</option>
+
+            {financialData.cards.map((card) => (
+                <option key={card.name} value={card.name}>
+                {card.name}
+                </option>
+            ))}
+            </select>
+        </div>
+
+        {/* Description */}
+        <div>
+            <label className="block text-sm font-medium text-gray-700">
+            Description
+            </label>
+
+            <input
+            type="text"
+            value={purchaseDescription}
+            onChange={(event) => setPurchaseDescription(event.target.value)}
+            placeholder="Groceries"
+            className="mt-1 w-full rounded-lg border border-gray-300 p-2"
+            />
+        </div>
+
+        {/* Amount */}
+        <div>
+            <label className="block text-sm font-medium text-gray-700">
+            Amount
+            </label>
+
+            <input
+            type="number"
+            step="0.01"
+            min="0"
+            value={purchaseAmount}
+            onChange={(event) => setPurchaseAmount(event.target.value)}
+            placeholder="25.50"
+            className="mt-1 w-full rounded-lg border border-gray-300 p-2"
+            />
+        </div>
+
+        {/* Purchase Date */}
+        <div>
+            <label className="block text-sm font-medium text-gray-700">
+            Purchase Date
+            </label>
+
+            <input
+            type="date"
+            value={purchaseDate}
+            onChange={(event) => setPurchaseDate(event.target.value)}
+            className="mt-1 w-full rounded-lg border border-gray-300 p-2"
+            />
+        </div>
+
+        </div>
+
+        <button
+        type="button"
+        className="mt-5 rounded-lg bg-black px-5 py-2 text-white hover:bg-gray-800"
+        >
+        Add Purchase
+        </button>
+    </div>
+    </section>
+
+      {/* Budget Breakdown */}
       <section className="mt-10">
         <div className="mb-4">
           <h2 className="text-xl font-bold text-gray-900">
-            Fixed Expenses
+            Budget Breakdown
           </h2>
 
           <p className="text-sm text-gray-500">
-            Your recurring monthly obligations
+            Variable expenses and required payments
           </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {financialData.expenses.map((expense) => (
-            <div
-              key={expense.id}
-              className="rounded-xl bg-white p-5 shadow-sm"
-            >
-              <div className="flex items-center justify-between">
-                <h3 className="font-medium text-gray-900">
-                  {expense.name}
-                </h3>
+        <div className="grid gap-4 md:grid-cols-3">
 
-                <span className="text-lg font-semibold">
-                  ${(expense.amount_cents / 100).toFixed(2)}
-                </span>
-              </div>
-            </div>
-          ))}
+          {/* Gas */}
+          <div className="rounded-xl bg-white p-5 shadow-sm">
+            <h3 className="font-medium text-gray-900">
+              Gas
+            </h3>
+
+            <p className="mt-2 text-2xl font-bold">
+              ${(financialData.gas_reserve / 100).toFixed(2)}
+            </p>
+
+            <p className="mt-1 text-sm text-gray-500">
+              Reserved maximum
+            </p>
+          </div>
+
+          {/* Electricity */}
+          <div className="rounded-xl bg-white p-5 shadow-sm">
+            <h3 className="font-medium text-gray-900">
+              Electricity
+            </h3>
+
+            <p className="mt-2 text-2xl font-bold">
+              ${(financialData.electricity_current / 100).toFixed(2)}
+            </p>
+
+            <p className="mt-1 text-sm text-gray-500">
+              Current amount
+            </p>
+          </div>
+
+          {/* Credit Card Minimums */}
+          <div className="rounded-xl bg-white p-5 shadow-sm">
+            <h3 className="font-medium text-gray-900">
+              Credit Card Minimums
+            </h3>
+
+            <p className="mt-2 text-2xl font-bold">
+              ${(financialData.minimum_payments / 100).toFixed(2)}
+            </p>
+
+            <p className="mt-1 text-sm text-gray-500">
+              Required payments
+            </p>
+          </div>
+
         </div>
       </section>
 
+        {/* Fixed Expenses */}
+        <section className="mt-10">
+        <div className="mb-4">
+            <h2 className="text-xl font-bold text-gray-900">
+            Fixed Expenses
+            </h2>
+
+            <p className="text-sm text-gray-500">
+            Your recurring monthly obligations
+            </p>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {financialData.expenses.map((expense) => (
+            <div
+                key={expense.id}
+                className="rounded-xl bg-white p-5 shadow-sm"
+            >
+                <div className="flex items-center justify-between">
+                <h3 className="font-medium text-gray-900">
+                    {expense.name}
+                </h3>
+
+                <span className="text-lg font-semibold">
+                    ${(expense.amount_cents / 100).toFixed(2)}
+                </span>
+                </div>
+            </div>
+            ))}
+        </div>
+        </section>
       {/* Credit Cards */}
       <section className="mt-10">
         <div className="mb-4">
@@ -161,7 +316,7 @@ export default function Home() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {financialData.cards.map((card) => (
             <div
-              key={card.id}
+              key={card.name}
               className="rounded-xl bg-white p-5 shadow-sm"
             >
               <h3 className="font-medium text-gray-900">
@@ -173,15 +328,21 @@ export default function Home() {
               </p>
 
               <p className="mt-1 text-sm text-gray-500">
-                Minimum payment: $
-                {(card.minimum_payment_cents / 100).toFixed(2)}
-              </p>
+                    Minimum payment: $
+                    {(card.minimum_payment_cents / 100).toFixed(2)}
+                    </p>
+
+                    <p className="mt-1 text-sm text-gray-500">
+                    {card.payment_method === "autopay"
+                        ? `Autopay: ${card.payment_day}th`
+                        : "Manual payment"}
+                    </p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Goals */}
+      {/* Savings Goals */}
       <section className="mt-10">
         <div className="mb-4">
           <h2 className="text-xl font-bold text-gray-900">
@@ -200,7 +361,7 @@ export default function Home() {
 
             return (
               <div
-                key={goal.id}
+                key={goal.name}
                 className="rounded-xl bg-white p-6 shadow-sm"
               >
                 <div className="flex justify-between">

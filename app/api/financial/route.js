@@ -17,9 +17,16 @@ export async function GET() {
     FROM goals
   `).all();
 
+  const settings = db.prepare(`
+    SELECT paycheck_cents, pay_frequency
+    FROM settings
+    LIMIT 1
+  `).get();
+
   return Response.json({
     expenses,
     cards,
-    goals
+    goals,
+    settings
   });
 }
